@@ -1,0 +1,57 @@
+.scroll-rail {
+  position: relative;
+  width: 16px;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+.scroll-rail-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(180, 180, 190, 0.35);
+}
+
+.scroll-rail-dot {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--rail-progress, 0) * 100%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid rgba(140, 140, 150, 0.55);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translate(-50%, -50%);
+  transition:
+    top 0.12s linear,
+    left 0.12s linear;
+}
+
+@media (max-width: 640px) {
+  .scroll-rail {
+    order: 2;
+    width: min(92vw, 380px);
+    height: 14px;
+    align-self: center;
+  }
+
+  .scroll-rail-line {
+    left: 0;
+    right: 0;
+    top: 50%;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    transform: translateY(-50%);
+  }
+
+  .scroll-rail-dot {
+    left: calc(var(--rail-progress, 0) * 100%);
+    top: 50%;
+  }
+}

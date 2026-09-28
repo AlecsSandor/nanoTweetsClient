@@ -1,0 +1,37 @@
+.hotness-meter {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.hotness-bar {
+  width: 3px;
+  height: 11px;
+  border-radius: 1px;
+  background: rgba(180, 180, 190, 0.3);
+  transition: background 0.25s ease;
+}
+
+.hotness-hot .hotness-bar.filled {
+  animation: hotness-pulse var(--hotness-glow-duration, 1.8s) ease-in-out infinite;
+}
+
+@keyframes hotness-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 var(--hotness-glow-blur, 6px) 0 var(--hotness-glow-color, transparent);
+    filter: brightness(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hotness-hot .hotness-bar.filled {
+    animation: none;
+  }
+}
