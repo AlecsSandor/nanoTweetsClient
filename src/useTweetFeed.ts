@@ -10,6 +10,12 @@ export interface TweetFeedState {
   loadingMore: boolean;
   hasMore: boolean;
   error: string | null;
+  /**
+   * Number of brand-new posts delivered over the live stream so far. Bumps
+   * only for genuinely new posts (not pagination, not duplicates), so it's a
+   * clean "something new just arrived" signal.
+   */
+  liveCount: number;
   loadMore: () => void;
 }
 
@@ -19,16 +25,19 @@ export function useTweetFeed(): TweetFeedState {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [liveCount, setLiveCount] = useState(0);
 
   const cursorRef = useRef<string | null>(null);
   const seenIds = useRef<Set<string>>(new Set());
   const fetchingRef = useRef(false);
 
-  const addTweets = useCallback((incoming: ApiTweet[], mode: 'append' | 'prepend') => {
+  /** Returns how many of the incoming tweets were actually new. */
+  const addTweets = useCallback((incoming: ApiTweet[], mode: 'append' | 'prepend'): number => {
     const fresh = incoming.filter((t) => !seenIds.current.has(t.id));
-    if (!fresh.length) return;
+    if (!fresh.length) return 0;
     fresh.forEach((t) => seenIds.current.add(t.id));
     setTweets((prev) => (mode === 'prepend' ? [...fresh, ...prev] : [...prev, ...fresh]));
+    return fresh.length;
   }, []);
 
   const loadMore = useCallback(() => {
@@ -79,11 +88,13 @@ export function useTweetFeed(): TweetFeedState {
   // Live feed — new posts get prepended as they arrive.
   useEffect(() => {
     const close = connectTweetStream({
-      onTweet: (tweet) => addTweets([tweet], 'prepend'),
+      onTweet: (tweet) => {
+        if (addTweets([tweet], 'prepend') > 0) setLiveCount((n) => n + 1);
+      },
     });
     return close;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { tweets, initialLoading, loadingMore, hasMore, error, loadMore };
+  return { tweets, initialLoading, loadingMore, hasMore, error, liveCount, loadMore };
 }

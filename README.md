@@ -21,6 +21,42 @@ npm run dev             # http://localhost:5173
   as a `?token=` query param on the `/api/stream` SSE connection (the
   browser's `EventSource` can't set custom headers).
 
+- `VITE_GEMINI_API_BASE_URL` — base URL of the Gemini microservice,
+  including any path prefix the entry point uses, e.g.
+  `https://api.veswip.com/gemini` (the app then calls
+  `https://api.veswip.com/gemini/api/generate`). Leave empty to reuse
+  `VITE_API_BASE_URL`, which only makes sense if the Gemini service is served
+  from the same root as the tweets one.
+- `VITE_GEMINI_API_TOKEN` — must match `CLIENT_API_TOKEN` in the Gemini
+  service's own `.env`. Sent as `Authorization: Bearer <token>` on
+  `POST /api/generate`.
+
+The Gemini service's `ALLOWED_ORIGINS` must include this app's origin
+(e.g. `http://localhost:5173` in dev), otherwise the browser's CORS check
+blocks the call.
+
+## Orb + summary text (Gemini)
+
+The orb and the text beside it are driven by `src/useFeedSummary.ts`:
+
+- **Trigger:** each new post delivered over the live stream (plus once after
+  the first page loads — `SUMMARIZE_ON_LOAD`). Pagination never triggers it.
+- **Prompt:** the text of the newest 5 posts only, asking for a summary of
+  max 150 characters.
+- **Orb:** `working` animation while a request is pending, `breathing`
+  otherwise (`THINKING_STATE` / `IDLE_STATE` in `OrbStatus.tsx`).
+- **Text:** typed out when the answer arrives; the previous summary stays on
+  screen while the next one is loading, and if a request fails.
+- **Cost guardrails:** at most one request in flight and one waiting, and the
+  waiting one is built from the newest posts at the moment it is sent, so a
+  burst of posts costs 1–2 calls, not one per post. Request starts are spaced
+  ≥4s apart (the service allows 20/min), with a 15s back-off after a 429.
+
+Heads-up: the Gemini service is billed per request, and
+`VITE_GEMINI_API_TOKEN` ships in the browser bundle. That's the same model as
+the tweets token, but here the token can spend money — if this app ever goes
+public, route the call through your own backend instead.
+
 ## How the service's data maps onto the UI
 
 No layout/CSS/animation changes — only what each piece renders and where
