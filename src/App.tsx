@@ -5,6 +5,8 @@ import ScrollRail from './ScrollRail';
 import AccountStack from './AccountStack';
 import { useTweetFeed } from './useTweetFeed';
 import { useFeedSummary } from './useFeedSummary';
+import { useNotificationSound } from './useNotificationSound';
+import SoundToggle from './SoundToggle';
 import { buildListItems } from './data';
 import { computeTopAccounts } from './accounts';
 import './App.css';
@@ -13,6 +15,7 @@ export default function App() {
   const listScrollRef = useRef<HTMLDivElement>(null);
   const { tweets, initialLoading, loadingMore, hasMore, error, liveCount, loadMore } = useTweetFeed();
   const summary = useFeedSummary(tweets, liveCount, initialLoading);
+  const { muted, toggleMuted } = useNotificationSound(liveCount);
 
   // Recomputed whenever the loaded/streamed tweet set changes, since hotness
   // and the top-accounts ranking are both relative to what's currently loaded.
@@ -21,6 +24,7 @@ export default function App() {
 
   return (
     <div className="app-root">
+      <SoundToggle muted={muted} onToggle={toggleMuted} />
       <div className="app-layout">
         <AccountStack accounts={topAccounts} />
 
